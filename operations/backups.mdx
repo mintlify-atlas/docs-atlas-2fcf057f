@@ -1,0 +1,67 @@
+---
+title: "Backup Strategy: Docker Volumes and Proxmox Resources"
+sidebarTitle: "Backups"
+description: "The homelab backup strategy uses a 1TB HDD at /mnt/hdd-backup to persist Docker volume data and Proxmox VM/LXC backups, with independent per-service backup support."
+---
+
+The homelab follows a philosophy of independent, per-service backups: each category of data — Docker volumes, Compose stacks, Proxmox VM and LXC images — is backed up in isolation so that restoring one service never requires touching another. All backup data lands on a 1 TB HDD exposed to both Proxmox and the Docker VM through an NFS share, giving every node in the lab access to a single, consistent backup target.
+
+## Backup Storage
+
+The 1 TB HDD is mounted at `/mnt/hdd-backup` and shared across the infrastructure via NFS. The following table summarises what gets backed up and where each category lives on the backup volume:
+
+| Category | Destination Path |
+|---|---|
+| Docker Volumes | `/mnt/hdd-backup/docker/volumes/` |
+| Compose Stacks | `/mnt/hdd-backup/docker/stacks/` |
+| Proxmox VM / LXC | `/mnt/hdd-backup/backups/` |
+
+## Backup Directory Layout
+
+The persistent storage tree under `/mnt/hdd-backup/docker/` is organised by function, keeping each type of artefact in its own named directory:
+
+```txt
+/mnt/hdd-backup/docker/
+├── portainer/
+├── stacks/
+├── volumes/
+├── backups/
+├── git/
+└── dashboards/
+```
+
+- **portainer/** — Portainer's own application data and configuration
+- **stacks/** — exported Compose stack definitions
+- **volumes/** — data from individual Docker named volumes
+- **backups/** — general-purpose backup artefacts
+- **git/** — repository mirrors or bare clones (planned for Gitea)
+- **dashboards/** — Dashy and Grafana dashboard JSON exports
+
+## Running the Backup Script
+
+The `backup.sh` script in the `scripts/` directory automates the full backup process. Run it manually at any time with:
+
+```bash
+bash scripts/backup.sh
+```
+
+<Warning>
+  Verify that `/mnt/hdd-backup` is mounted and writable before executing `backup.sh`. If the NFS share is unavailable, the script will write to the local filesystem (or fail silently), producing an incomplete or missing backup with no on-disk evidence of the problem. Run `mount | grep hdd-backup` to confirm the mount is active before proceeding.
+</Warning>
+
+For unattended operation, add `backup.sh` to a `cron` schedule on the Docker VM so it runs automatically — for example, nightly at 03:00. See the [Scripts](/operations/scripts) page for a sample crontab configuration.
+
+## Proxmox Backups
+
+Proxmox VE ships with the built-in `vzdump` utility for creating consistent snapshots of LXC containers and KVM virtual machines. `vzdump` can be configured directly in the Proxmox web UI (Datacenter → Backup) or invoked from the command line, and should be pointed at `/mnt/hdd-backup` so that all VM and LXC backup archives land on the same NFS-backed volume as the Docker data:
+
+```bash
+# Example: back up LXC container ID 101 to the shared backup storage
+vzdump 101 --storage hdd-backup --mode snapshot
+```
+
+Scheduling Proxmox backups through the web UI is the recommended approach — Proxmox will handle locking, compression, and retention automatically, and the job history is visible in the task log.
+
+<Tip>
+  Periodically test your restore procedures end-to-end. A backup that has never been restored is an untested assumption. Spin up a throwaway LXC or restore a single Docker volume to a temporary path and verify the data is intact before you actually need it in an emergency.
+</Tip>

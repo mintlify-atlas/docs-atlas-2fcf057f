@@ -1,0 +1,65 @@
+---
+title: "Homelab Network: IP Allocation and DNS Zones"
+sidebarTitle: "Network"
+description: "The homelab runs on a flat 192.168.1.0/24 network with structured IP reservations, an internal DNS zone (home.arpa), and DHCP for client devices."
+---
+
+The homelab network is built on a single flat `192.168.1.0/24` subnet, with a deliberately structured IP reservation scheme that makes it easy to identify a device's role at a glance. Rather than relying on DHCP for infrastructure hosts, all servers, hypervisors, containers, and VMs are assigned static IPs within reserved ranges. Client devices and temporary machines fall into the DHCP pool at the upper end of the subnet. Internal DNS resolution is handled by a self-hosted Technitium DNS server, exposing all services under the `home.arpa` local domain.
+
+## Network Configuration
+
+| Setting | Value |
+|---|---|
+| Network | `192.168.1.0/24` |
+| Gateway | `192.168.1.1` |
+| DNS Primary | `192.168.1.21` |
+| Local Domain | `home.arpa` |
+| DHCP Range | `192.168.1.100–254` |
+
+## IP Reservation Scheme
+
+The address space is divided into logical blocks, each dedicated to a specific class of device. This makes it straightforward to read a device's IP and immediately understand its function within the homelab.
+
+| Range | Use |
+|---|---|
+| `192.168.1.1` | Router |
+| `192.168.1.2–19` | Infrastructure |
+| `192.168.1.20–29` | Hypervisors |
+| `192.168.1.30–39` | Docker / Dev |
+| `192.168.1.40–49` | Storage |
+| `192.168.1.50–69` | Labs / AI |
+| `192.168.1.70–99` | Expansion |
+| `192.168.1.100–254` | DHCP (clients) |
+
+<Tip>
+  The structured IP scheme makes it easy to identify a device's role by its IP address alone. A host at `192.168.1.22` is immediately recognisable as a hypervisor-range guest, while one at `192.168.1.55` belongs to the Labs / AI block — no lookup needed.
+</Tip>
+
+## Internal DNS
+
+All homelab services are resolvable by hostname within the `home.arpa` local domain. This is powered by a **Technitium DNS** server running in an LXC container at `192.168.1.21` (`dns.home.arpa`).
+
+Technitium DNS serves the following roles:
+
+- **Authoritative DNS** for the `home.arpa` zone, resolving internal hostnames to their static IPs
+- **DNS cache** to reduce upstream query latency for client devices
+- **Split DNS** so that internal service names never leak to public resolvers
+- **Ad and tracker blocking** via a curated blocklist (`big.oisd.nl`), with blocked domains returning `NXDOMAIN`
+- **Wildcard records** to simplify adding new subdomains under `home.arpa`
+
+All infrastructure hosts and LXC containers are configured to use `192.168.1.21` as their primary DNS resolver, so hostnames like `portainer.home.arpa` or `npm.home.arpa` resolve correctly from anywhere on the network.
+
+## Useful Network Commands
+
+The following commands are helpful for quickly auditing the network, checking interface configuration, or verifying routing from any Linux host on the homelab.
+
+```bash
+# Discover all active hosts on the subnet
+nmap -sn 192.168.1.0/24
+
+# Display network interface addresses and status
+ip a
+
+# Display the routing table
+ip route
+```

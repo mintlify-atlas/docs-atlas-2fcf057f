@@ -1,0 +1,42 @@
+---
+title: "Observability Stack: Monitoring and Dashboards"
+sidebarTitle: "Observability"
+description: "The homelab observability stack combines Dashy, Uptime Kuma, Grafana, Prometheus, and Speedtest Tracker to monitor service health, network performance, and infrastructure metrics."
+---
+
+Observability in the homelab is built in layers: a visual dashboard for quick service discovery, an ISP performance tracker for long-term network health, a network map for device discovery, and a planned metrics pipeline (Prometheus + Grafana) with uptime monitoring (Uptime Kuma) that will provide alerting and historical trend analysis once deployed.
+
+## Tools Overview
+
+| Tool                | Function               | URL                       | Status |
+| ------------------- | ---------------------- | ------------------------- | ------ |
+| Dashy               | Visual dashboard       | `dashy.home.arpa`         | ✅     |
+| Speedtest Tracker   | ISP monitoring         | `speed.home.arpa`         | ✅     |
+| Homelable           | Network discovery      | `homelable.home.arpa`     | ✅     |
+| Uptime Kuma         | Health checks          | —                         | 🚧     |
+| Grafana             | Metric dashboards      | `grafana.home.arpa`       | 🚧     |
+| Prometheus          | Metric collection      | `prometheus.home.arpa`    | 🚧     |
+
+## Dashy
+
+Dashy serves as the homelab's front page — a configurable visual dashboard that aggregates links to every deployed service in one place. Rather than memorising ports or bookmarking individual URLs, the homelab operator (and any authorised user on the LAN) can open `dashy.home.arpa` to see a structured overview of all available services, complete with status indicators and grouped categories.
+
+Dashy runs as a Docker Compose stack on the Docker VM (`192.168.1.30`) and is defined in `compose/dashy/`.
+
+## Speedtest Tracker
+
+Speedtest Tracker provides continuous ISP performance monitoring by running periodic speed tests and recording the results over time. This makes it easy to identify patterns such as peak-hour degradation, detect ISP-side issues, and maintain a historical record of upload and download performance.
+
+It is accessible at `speed.home.arpa` and runs as a Docker Compose stack in `compose/speedtest-tracker/` on the Docker VM.
+
+## Uptime Kuma (Planned)
+
+Uptime Kuma will serve as the internal health check and uptime monitor for all homelab services. Once deployed, it will perform regular HTTP and TCP probes against services like Portainer, Dashy, Technitium DNS, and Nginx Proxy Manager, alerting on downtime and providing an uptime history dashboard. Its Docker Compose stack is already scaffolded in `compose/uptime-kuma/`.
+
+## Grafana + Prometheus (Planned)
+
+Prometheus will be deployed to scrape metrics from Docker, the Proxmox host, and individual services using appropriate exporters. Grafana will connect to Prometheus as a data source and provide customisable dashboards for CPU, memory, disk I/O, network throughput, and container-level resource consumption. Together they form the long-term metrics layer of the observability stack, complementing Uptime Kuma's availability monitoring with deep performance insight.
+
+<Note>
+  **Grafana**, **Prometheus**, and **Uptime Kuma** are all marked 🚧 (planned) and have not yet been deployed. They are tracked in Roadmap Phase 3. The DNS entries and Nginx Proxy Manager proxy hosts will be configured when deployment begins.
+</Note>

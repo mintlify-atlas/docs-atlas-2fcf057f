@@ -1,0 +1,82 @@
+{
+  "projectType": "infrastructure",
+  "projectName": "Homelab",
+  "projectDescription": "A self-hosted homelab infrastructure built on Proxmox VE, featuring Docker services, internal DNS, reverse proxy, VPN access, observability tooling, and automation scripts.",
+  "theme": "aspen",
+  "primaryColor": "#E57000",
+  "lightColor": null,
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Overview",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "architecture",
+              "roadmap"
+            ]
+          },
+          {
+            "group": "Infrastructure",
+            "pages": [
+              "infrastructure/proxmox",
+              "infrastructure/network",
+              "infrastructure/storage"
+            ]
+          },
+          {
+            "group": "Services",
+            "pages": [
+              "services/docker-platform",
+              "services/dns",
+              "services/reverse-proxy",
+              "services/vpn",
+              "services/observability"
+            ]
+          },
+          {
+            "group": "Operations",
+            "pages": [
+              "operations/scripts",
+              "operations/backups",
+              "operations/inventory"
+            ]
+          },
+          {
+            "group": "Labs & Roadmap",
+            "pages": [
+              "labs/dev-platform",
+              "labs/future-labs"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Proxmox VE hypervisor with LXC containers and VMs",
+    "Internal DNS with Technitium (adblocking, split DNS, wildcards)",
+    "Nginx Proxy Manager for reverse proxy and SSL termination",
+    "Tailscale VPN for secure remote access",
+    "Docker platform with Portainer, Dashy, and monitoring stack",
+    "Observability with Grafana, Prometheus, Uptime Kuma, and Speedtest Tracker",
+    "Automation scripts for backups, Docker cleanup, and inventory updates",
+    "Persistent NFS-backed storage shared between Proxmox and Docker VM"
+  ],
+  "publicApiSurface": [
+    "backup.sh — automated backup script",
+    "prune_docker.sh — Docker resource cleanup script",
+    "update_hosts.sh — host inventory update script",
+    "compose/dashy — Dashy dashboard Docker Compose stack",
+    "compose/portainer — Portainer Docker Compose stack",
+    "compose/speedtest-tracker — Speedtest Tracker Docker Compose stack",
+    "compose/uptime-kuma — Uptime Kuma Docker Compose stack",
+    "inventory/hosts.md — host inventory",
+    "inventory/dns.md — DNS records inventory",
+    "inventory/ports.md — port allocation inventory",
+    "inventory/services.md — services inventory"
+  ]
+}

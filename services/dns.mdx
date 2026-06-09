@@ -1,0 +1,58 @@
+---
+title: "Technitium DNS: Internal DNS, Ad-Blocking, and Split DNS"
+sidebarTitle: "DNS"
+description: "Technitium DNS runs at 192.168.1.21 and provides local name resolution for the home.arpa domain, DNS caching, ad-blocking via blocklists, and split DNS support."
+---
+
+Technitium DNS is the authoritative resolver for the homelab's internal `home.arpa` domain and the first DNS hop for every device on the LAN. It handles local name resolution, caches upstream lookups to reduce latency, blocks advertising and tracking domains via curated blocklists, and supports split DNS so that internal hostnames never leak to the public internet.
+
+## Service Details
+
+| Property   | Value             |
+| ---------- | ----------------- |
+| IP Address | `192.168.1.21`    |
+| Hostname   | `dns.home.arpa`   |
+| Type       | LXC               |
+| Status     | ✅ Active         |
+
+## Features
+
+Technitium DNS is configured to provide the following capabilities across the homelab:
+
+- **Local DNS resolution** — authoritative for `home.arpa`; every VM, LXC, and service has a registered A record
+- **DNS caching** — upstream responses are cached locally to minimise external round-trips
+- **Split DNS** — internal names resolve to private IPs; external names resolve normally through the upstream forwarder
+- **Ad-blocking** — domain blocklists are applied at the resolver level, protecting all LAN clients without requiring per-device configuration
+- **Internal records** — A records for all infrastructure nodes (e.g. `pve.home.arpa`, `docker.home.arpa`, `npm.home.arpa`)
+- **Wildcard support** — a single wildcard record (`*.home.arpa → 192.168.1.22`) routes all service subdomains to Nginx Proxy Manager
+
+## Ad-Blocking
+
+Ad-blocking is implemented by subscribing Technitium to a community-maintained blocklist. The recommended list is the OISD "Big" feed, which covers advertising, tracking, and malware domains:
+
+```txt
+https://big.oisd.nl/
+```
+
+Set the **block mode** to `NXDOMAIN` so that blocked domains return a "domain does not exist" response rather than a redirect or empty answer. This is the most compatible and privacy-preserving mode.
+
+## Internal Records
+
+Every infrastructure node in the homelab is registered as a DNS A record in the `home.arpa` zone. This means services are reachable by hostname from any LAN client without relying on `/etc/hosts` files or mDNS.
+
+Example records:
+
+| Hostname               | IP Address      |
+| ---------------------- | --------------- |
+| `pve.home.arpa`        | `192.168.1.20`  |
+| `dns.home.arpa`        | `192.168.1.21`  |
+| `npm.home.arpa`        | `192.168.1.22`  |
+| `ts.home.arpa`         | `192.168.1.23`  |
+| `docker.home.arpa`     | `192.168.1.30`  |
+| `homelable.home.arpa`  | `192.168.1.103` |
+
+Service subdomains (e.g. `portainer.home.arpa`, `dashy.home.arpa`) are handled by a wildcard record pointing to Nginx Proxy Manager at `192.168.1.22`.
+
+<Note>
+  For all LAN clients to benefit from local name resolution and ad-blocking, configure your router's DHCP server to advertise **`192.168.1.21`** as the primary DNS server. Clients that use a different resolver will not resolve `home.arpa` hostnames.
+</Note>

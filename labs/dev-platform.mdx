@@ -1,0 +1,85 @@
+---
+title: "Dev Platform: Gitea, PostgreSQL, Redis, and CI/CD"
+sidebarTitle: "Dev Platform"
+description: "The homelab dev platform will add Gitea for self-hosted Git, PostgreSQL and Redis as backing services, and a CI/CD pipeline — all running on the existing Docker VM."
+---
+
+Phase 2 of the homelab roadmap expands the Docker VM (`docker.home.arpa`, `192.168.1.30`) from a basic container host into a proper development platform. The foundation services — Portainer, Dashy, and Speedtest Tracker — are already running. The next layer adds a self-hosted Git server, a relational database, and a caching layer to support real development workloads such as bots, workers, and REST APIs.
+
+<Note>
+  All services listed as 🚧 in this page are planned and not yet deployed. They are part of the Phase 2 roadmap and will be added incrementally to the existing Docker VM.
+</Note>
+
+## Planned Services
+
+The following services are queued for deployment on the Docker platform as part of Phase 2:
+
+| Service    | URL               | Role               | Status |
+| ---------- | ----------------- | ------------------ | ------ |
+| Gitea      | `git.home.arpa`   | Self-hosted Git    | 🚧     |
+| PostgreSQL | —                 | Relational DB      | 🚧     |
+| Redis      | —                 | Cache / queue      | 🚧     |
+
+## Currently Deployed (Phase 2)
+
+These services are already live on the Docker VM and form the operational base that the planned services will build on:
+
+| Service           | URL                    | Status |
+| ----------------- | ---------------------- | ------ |
+| Portainer         | `portainer.home.arpa`  | ✅     |
+| Dashy             | `dashy.home.arpa`      | ✅     |
+| Speedtest Tracker | `speed.home.arpa`      | ✅     |
+
+## Gitea
+
+Gitea will serve as the homelab's self-hosted Git server, providing a lightweight alternative to cloud-hosted platforms like GitHub. It will be reachable internally at `git.home.arpa`, routed through Nginx Proxy Manager (`npm.home.arpa`, `192.168.1.22`) the same way all other internal services are exposed.
+
+Gitea's data volumes — repositories, user data, and configuration — will be persisted to `/mnt/hdd-backup/git/` on the shared HDD storage, which is already mounted on the Docker VM via an NFS share from Proxmox. This ensures repository data survives container restarts and is included in the existing automated backup routine (`backup.sh`).
+
+PostgreSQL will be used as Gitea's backing database rather than the default SQLite, providing better performance and a shared database instance that other services can also use.
+
+## PostgreSQL & Redis
+
+PostgreSQL and Redis will be deployed as shared backing services available to any workload running on the Docker VM. Rather than spinning up a separate database per project, a single PostgreSQL instance will host multiple databases — one per service or application — keeping resource usage low while enabling a proper relational data layer.
+
+Redis will act as a shared cache and message queue. This is particularly useful for Python workers that need lightweight task queuing and for bots that benefit from fast in-memory state storage without round-tripping to a database.
+
+Both services will have their data persisted under `/mnt/hdd-backup/docker/volumes/` to ensure durability across restarts.
+
+## Development Workloads
+
+With Gitea, PostgreSQL, and Redis in place, the Docker VM becomes capable of hosting active development projects alongside the infrastructure services. Planned workloads include:
+
+- **Discord bots** — event-driven bots backed by PostgreSQL for persistence and Redis for state caching
+- **Telegram bots** — similar architecture, leveraging the same shared database and cache layer
+- **Python workers** — background task processors using Redis as a queue
+- **REST APIs** — lightweight services that expose data from PostgreSQL over HTTP, hosted behind Nginx Proxy Manager
+
+Each workload will be managed as a Docker Compose stack in Portainer, keeping deployments consistent with the rest of the platform.
+
+## CI/CD
+
+A formal CI/CD pipeline is planned for Phase 4 of the roadmap as part of the GitOps and automation work. The current thinking is to use Gitea Actions — Gitea's built-in CI system compatible with GitHub Actions syntax — to build and deploy workloads directly from the self-hosted Git server.
+
+<Tip>
+  Gitea Actions can run on self-hosted runners, meaning the Docker VM itself can execute pipelines without relying on any external service. This keeps the entire build and deploy loop inside the homelab.
+</Tip>
+
+The eventual goal is a GitOps model where pushing to a repository branch automatically triggers a build, test, and deploy sequence — all orchestrated within the homelab infrastructure.
+
+<CardGroup cols={2}>
+  <Card
+    title="Docker Platform"
+    icon="docker"
+    href="/services/docker-platform"
+  >
+    Explore the existing Docker VM infrastructure that the dev platform builds on.
+  </Card>
+  <Card
+    title="Future Labs"
+    icon="flask"
+    href="/labs/future-labs"
+  >
+    See what comes after Phase 2 — Kubernetes, AI workloads, GitOps, and Authentik.
+  </Card>
+</CardGroup>

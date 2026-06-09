@@ -1,0 +1,48 @@
+---
+title: "Tailscale VPN: Secure Remote Access to the Homelab"
+sidebarTitle: "VPN"
+description: "Tailscale runs as an LXC at 192.168.1.23 and provides secure remote access via a subnet router, allowing access to all homelab services over an encrypted mesh VPN."
+---
+
+Tailscale provides secure, zero-configuration remote access to the homelab without requiring any open inbound ports on the router. A dedicated LXC at `192.168.1.23` acts as a subnet router, advertising the entire `192.168.1.0/24` network to the Tailscale mesh. Any device authenticated to the same Tailnet — phone, laptop, or workstation — can reach every homelab service as if it were on the local LAN.
+
+## Service Details
+
+| Property   | Value           |
+| ---------- | --------------- |
+| IP Address | `192.168.1.23`  |
+| Hostname   | `ts.home.arpa`  |
+| Type       | LXC             |
+| Status     | ✅ Active       |
+
+## Features
+
+- **Secure remote access** — end-to-end encrypted WireGuard tunnels between all Tailscale nodes
+- **Subnet router** — the Tailscale LXC advertises `192.168.1.0/24`, making every homelab device reachable from remote Tailscale clients
+- **Exit node capability** — the LXC can optionally be configured as an exit node to route all client internet traffic through the homelab connection
+- **Remote administration without port forwarding** — Proxmox, Portainer, and all other management interfaces are accessible remotely without exposing any ports on the public router
+
+## Subnet Router
+
+The Tailscale LXC is configured as a subnet router for the homelab's primary network range (`192.168.1.0/24`). When a remote Tailscale client has this route accepted, it can reach any device on the LAN — including Proxmox, Docker services, and LXC containers — without needing a full-tunnel VPN or individual device enrollments.
+
+To activate subnet routing, run the following on the Tailscale LXC, then approve the advertised route in the Tailscale admin console:
+
+```bash
+# Advertise the homelab subnet via Tailscale
+tailscale up --advertise-routes=192.168.1.0/24
+
+# Optionally enable IP forwarding (required for subnet routing)
+echo 'net.ipv4.ip_forward = 1' | tee -a /etc/sysctl.conf
+sysctl -p
+```
+
+After running the command, go to the [Tailscale admin console](https://login.tailscale.com/admin/machines), find the `ts.home.arpa` node, and approve the advertised subnet route.
+
+<Info>
+  Tailscale requires **no open inbound ports** on your router. All connections are initiated outbound by the Tailscale daemon and routed through Tailscale's coordination servers or directly peer-to-peer using NAT traversal. Your homelab remains completely inaccessible to the public internet.
+</Info>
+
+<Tip>
+  Enable **Tailscale MagicDNS** in your Tailnet settings and set a custom DNS server pointing to `192.168.1.21` (Technitium DNS). This allows remote clients to resolve `home.arpa` hostnames — such as `portainer.home.arpa` — seamlessly over the Tailscale tunnel, giving you the same name-based access you have on the local LAN.
+</Tip>

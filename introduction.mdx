@@ -1,0 +1,85 @@
+---
+title: "Homelab: DevOps Learning Lab on Proxmox VE"
+sidebarTitle: "Introduction"
+description: "Homelab is a personal self-hosted infrastructure platform running on Proxmox VE, designed for DevOps learning, service isolation, and reproducible automation."
+---
+
+Homelab is a personal infrastructure project built on Proxmox VE, designed to provide a hands-on environment for development, self-hosting, DevOps practices, networking, automation, observability, and real-world infrastructure learning. Rather than relying on cloud abstractions, every service runs on dedicated hardware with clearly defined boundaries — making it a reproducible, modular, and genuinely educational platform that evolves alongside its operator.
+
+## Philosophy
+
+The homelab is structured as a deliberate set of layers, each building on the one below. This hierarchy keeps concerns separated, simplifies debugging, and mirrors production-grade infrastructure patterns at a personal scale.
+
+<Steps>
+  <Step title="Proxmox Host">
+    The bare-metal hypervisor layer. Proxmox VE manages all virtual machines and LXC containers, providing resource allocation, snapshots, and backups at the hardware level.
+  </Step>
+  <Step title="Infrastructure Base (LXC)">
+    Lightweight LXC containers handle core networking services — DNS, reverse proxy, and VPN — keeping them isolated from application workloads and cheap to snapshot independently.
+  </Step>
+  <Step title="Docker Platform">
+    A dedicated Debian 13 VM runs Docker Engine and Docker Compose, providing a clean boundary between the OS-level infrastructure and containerised services.
+  </Step>
+  <Step title="Services">
+    Application-level containers — dashboards, monitoring tools, Git hosting, and databases — are deployed as Compose stacks on the Docker VM with persistent volumes on NFS-backed storage.
+  </Step>
+  <Step title="Applications">
+    End-user-facing applications and internal tooling consume the services layer, accessed through Nginx Proxy Manager with local DNS resolution via `home.arpa`.
+  </Step>
+  <Step title="Development & Learning">
+    The top of the stack is the lab itself: a space for experimenting with new tooling, breaking things safely, and building the skills that mirror real DevOps workflows.
+  </Step>
+</Steps>
+
+## Core Principles
+
+Every architectural decision in the homelab flows from a small set of guiding principles.
+
+**Service Isolation** — Each concern lives in its own LXC container or Compose stack. A failing service cannot bring down unrelated ones, and upgrades can be performed independently.
+
+**Simple Troubleshooting** — Static IPs, predictable hostnames under `home.arpa`, and a flat network topology mean that diagnosing problems never requires guessing where something lives.
+
+**Modular Infrastructure** — New services plug in without restructuring existing ones. Adding a container, a Compose stack, or a new VM follows the same repeatable patterns already in place.
+
+**Independent Backups** — Because core services run in separate LXC containers, each can be snapshotted and restored on its own schedule without touching the rest of the stack.
+
+**Real Networking** — The lab uses genuine DNS, reverse proxying, VPN routing, and subnet segmentation — not loopback shortcuts — so the skills developed here transfer directly to production environments.
+
+**Reproducible Lab** — Configuration lives in this repository. Scripts, Compose files, and inventory documents mean the entire environment can be rebuilt from a known state rather than reconstructed from memory.
+
+## What You'll Find Here
+
+<CardGroup cols={2}>
+  <Card
+    title="Architecture"
+    icon="sitemap"
+    href="/architecture"
+  >
+    Full infrastructure topology: Proxmox hypervisor, LXC containers, Docker VM, network layout, and repository structure.
+  </Card>
+  <Card
+    title="Proxmox Host"
+    icon="server"
+    href="/infrastructure/proxmox"
+  >
+    How the Proxmox VE hypervisor is configured, including VM and LXC provisioning, storage, and resource allocation.
+  </Card>
+  <Card
+    title="Docker Platform"
+    icon="docker"
+    href="/services/docker-platform"
+  >
+    The Debian 13 Docker VM, Compose stack layout, Portainer setup, and persistent volume strategy.
+  </Card>
+  <Card
+    title="Scripts & Automation"
+    icon="terminal"
+    href="/operations/scripts"
+  >
+    Automation scripts for backups, Docker pruning, and host inventory updates that keep the lab running cleanly.
+  </Card>
+</CardGroup>
+
+<Tip>
+  This is a living infrastructure. Services are added, configurations are refined, and the architecture evolves as new tools and techniques are explored. The repository reflects the current state of the lab at all times — check the roadmap for what is coming next.
+</Tip>

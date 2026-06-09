@@ -1,0 +1,67 @@
+---
+title: "Homelab Storage: HDD Volumes and NFS Persistence"
+sidebarTitle: "Storage"
+description: "The homelab uses a 1TB HDD for Docker volume persistence and Proxmox backups, mounted at /mnt/hdd-backup and shared via NFS between the hypervisor and Docker VM."
+---
+
+Storage in the homelab is designed around a single guiding principle: persistent data must survive container restarts, VM rebuilds, and host reboots without manual intervention. A 1TB HDD provides the physical backing for both Proxmox-level backups and Docker volume persistence. That disk is exposed to the rest of the infrastructure through an NFS share, making the same storage path available to both the Proxmox host and the Docker VM — ensuring that all stateful services write to one consistent, centrally managed location regardless of which guest is running them.
+
+## Storage Resources
+
+| Resource | Use |
+|---|---|
+| HDD 1TB | Backups + Docker Volumes |
+| NFS Share | Shared between Proxmox and Docker VM |
+
+## Mount Point
+
+The HDD is mounted at the following path on both the Proxmox host and the Docker VM:
+
+```txt
+/mnt/hdd-backup
+```
+
+All persistent data — Docker volumes, stack configurations, backups, and dashboards — lives under this mount point, keeping it separate from the system disk and easily identifiable.
+
+## Persistent Directory Structure
+
+The `docker/` subdirectory under the mount point is organised by function, giving each class of data its own dedicated folder.
+
+```txt
+/mnt/hdd-backup/docker/
+├── portainer/
+├── stacks/
+├── volumes/
+├── backups/
+├── git/
+└── dashboards/
+```
+
+| Directory | Purpose |
+|---|---|
+| `portainer/` | Portainer agent data and configuration |
+| `stacks/` | Docker Compose stack definitions |
+| `volumes/` | Named volume data for running containers |
+| `backups/` | Automated service backup archives |
+| `git/` | Self-hosted Git repository data |
+| `dashboards/` | Dashboard configuration files (Dashy, Grafana) |
+
+## NFS Share
+
+The 1TB HDD is exported as an NFS share so that both the **Proxmox host** and the **Docker VM** (`docker.home.arpa`, `192.168.1.30`) can mount and read from the same storage path. This centralised approach means:
+
+- Docker containers bind-mount volume paths from `/mnt/hdd-backup/docker/volumes/` without needing local disk space on the VM's system drive.
+- Proxmox can write guest backups and snapshots directly to the same physical disk without requiring a separate backup server.
+- Data written by one host is immediately visible to the other, enabling straightforward migration and recovery workflows.
+
+<Warning>
+  Always verify that the NFS mount is available and healthy before starting Docker stacks that depend on persistent volumes. If the NFS share is unmounted or unreachable, containers will start with empty bind-mount paths, which can cause data loss or corrupted application state. Run `mount | grep hdd-backup` on the Docker VM to confirm the share is active before bringing up stateful services.
+</Warning>
+
+## Backup Strategy
+
+Each service running in the homelab has independent backup support through the `backup.sh` script located in the `scripts/` directory of the repository. The script is designed to be run on a schedule and archives service-specific data into `/mnt/hdd-backup/docker/backups/`, keeping each service's backup isolated from the others.
+
+This means a failed or corrupted backup for one service does not affect the archives of any other service, and restoring a single container does not require touching the rest of the stack.
+
+For full details on backup configuration, schedules, and restore procedures, see the [Backups](/operations/backups) page.

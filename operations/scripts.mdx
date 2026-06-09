@@ -1,0 +1,66 @@
+---
+title: "Automation Scripts: Backup, Docker Cleanup, and Inventory"
+sidebarTitle: "Scripts"
+description: "The homelab ships three shell scripts for routine operations: automated backups, Docker resource cleanup, and host inventory updates — all located under scripts/."
+---
+
+The `scripts/` directory contains three shell scripts that handle the most repetitive operational tasks in the homelab: backing up Docker volumes and Proxmox resources, cleaning up unused Docker objects, and keeping the host inventory files up to date. Running these regularly keeps the environment lean, documented, and recoverable.
+
+## Available Scripts
+
+| Script | Purpose |
+|---|---|
+| `backup.sh` | Automated backups of Docker volumes and Proxmox resources |
+| `prune_docker.sh` | Docker resource cleanup — containers, images, networks, and volumes |
+| `update_hosts.sh` | Inventory update — regenerates the host list under `inventory/` |
+
+## backup.sh
+
+`backup.sh` automates the process of persisting stateful data from the homelab to the dedicated 1 TB HDD mounted at `/mnt/hdd-backup`. It targets both Docker volumes (the persistent data layer for running containers) and Proxmox-managed resources such as VM and LXC container backups. Running this script on a regular schedule ensures that a point-in-time recovery is always available without requiring any manual intervention.
+
+The backup destination is organized under `/mnt/hdd-backup/docker/` with sub-directories for volumes, stacks, and other Docker artefacts, keeping each category of data clearly separated and easy to restore individually.
+
+<Tip>
+  Before running `backup.sh`, confirm that `/mnt/hdd-backup` is mounted and accessible. The NFS share is shared between Proxmox and the Docker VM, so a mount failure will silently produce an empty or incomplete backup.
+</Tip>
+
+## prune_docker.sh
+
+Over time, Docker accumulates stopped containers, dangling images, orphaned networks, and unused volumes that consume disk space without serving any active workload. `prune_docker.sh` removes all of these in one pass, keeping the Docker VM's filesystem from filling up between deployments.
+
+The script leverages Docker's built-in prune subcommands:
+
+```bash
+# Remove all stopped containers, unused networks, dangling images, and build cache
+docker system prune -f
+
+# Remove all unused volumes (data not referenced by any container)
+docker volume prune -f
+```
+
+Run this script periodically — or after tearing down a stack — to reclaim disk space and avoid resource exhaustion on the Docker VM.
+
+## update_hosts.sh
+
+`update_hosts.sh` refreshes the host inventory files stored under `inventory/`. As new LXC containers or VMs are provisioned in Proxmox (or decommissioned), the inventory can drift out of sync with reality. This script brings `inventory/hosts.md` and related files back in line with the current state of the network, making the documentation an accurate reflection of what is actually running.
+
+## Scheduling with Cron
+
+<Tip>
+  Schedule all three scripts with `cron` to achieve fully automated, hands-off maintenance. A weekly Docker cleanup and a nightly or weekly backup are sensible starting points for a homelab workload.
+</Tip>
+
+Add entries to the crontab on the Docker VM (edit with `crontab -e`):
+
+```bash
+# Run Docker cleanup every Sunday at 02:00
+0 2 * * 0 /home/user/homelab/scripts/prune_docker.sh >> /var/log/prune_docker.log 2>&1
+
+# Run backup every night at 03:00
+0 3 * * * /home/user/homelab/scripts/backup.sh >> /var/log/backup.log 2>&1
+
+# Update host inventory every Sunday at 04:00
+0 4 * * 0 /home/user/homelab/scripts/update_hosts.sh >> /var/log/update_hosts.log 2>&1
+```
+
+Redirecting output to log files makes it easy to audit what each run did and to troubleshoot failures without having to run the scripts interactively.

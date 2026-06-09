@@ -1,0 +1,113 @@
+---
+title: "Homelab Architecture: Proxmox, LXC, and Docker Stack"
+sidebarTitle: "Architecture"
+description: "Full infrastructure topology of the homelab: Proxmox VE hypervisor, LXC containers for core services, a dedicated Docker VM, and a flat 192.168.1.0/24 network."
+---
+
+The homelab is built around Proxmox VE as the single hypervisor managing all compute resources. Core networking services — DNS, reverse proxy, and VPN — run in isolated LXC containers for maximum efficiency and independent lifecycle management. Application workloads live inside a dedicated Debian 13 Docker VM, cleanly separated from the infrastructure layer. A flat `192.168.1.0/24` network with static IP assignments and internal DNS resolution ties everything together, making every service addressable by a predictable hostname under the `home.arpa` domain.
+
+## Infrastructure Layers
+
+The stack is organised as a strict dependency hierarchy. Each layer depends only on the one beneath it, which means failures are contained and each tier can be maintained independently.
+
+<Steps>
+  <Step title="Proxmox Host — 192.168.1.20">
+    The bare-metal foundation. Proxmox VE provides hypervisor services, VM and LXC lifecycle management, storage allocation, and the web-based management interface at `pve.home.arpa`.
+  </Step>
+  <Step title="Infrastructure Base (LXC Containers)">
+    Lightweight LXC containers handle the networking primitives the rest of the stack depends on: Technitium DNS for local resolution and ad-blocking, Nginx Proxy Manager for SSL termination and reverse proxying, and Tailscale for secure remote access. These run on dedicated IPs in the `192.168.1.21–23` range.
+  </Step>
+  <Step title="Docker Platform — VM 192.168.1.30">
+    A dedicated Debian 13 virtual machine runs Docker Engine and Docker Compose. Isolating Docker inside a VM rather than an LXC container provides a clean kernel boundary and makes it straightforward to snapshot or rebuild the entire container platform without affecting core infrastructure.
+  </Step>
+  <Step title="Services">
+    Compose stacks deployed on the Docker VM: Portainer for container management, Dashy as the main dashboard, Speedtest Tracker for ISP monitoring, and additional services as they are promoted from lab to production.
+  </Step>
+  <Step title="Applications">
+    End-user-facing interfaces and internal tooling that consume the services layer. All are proxied through Nginx Proxy Manager and reachable via `home.arpa` hostnames resolved by Technitium DNS.
+  </Step>
+  <Step title="Development & Learning">
+    Lab environments, experiments, and development workloads sit at the top of the stack. They can consume any layer below without coupling to it permanently.
+  </Step>
+</Steps>
+
+<Note>
+  Running LXC containers for core networking services and a full VM for Docker is a deliberate isolation strategy. If the Docker VM needs to be rebuilt, rebooted, or rolled back to a snapshot, DNS, reverse proxy, and VPN continue operating without interruption. Conversely, problems inside an LXC container never affect the Docker workloads or other containers.
+</Note>
+
+## Core Infrastructure
+
+All core nodes use static IP assignments and are registered in Technitium DNS under the `home.arpa` domain.
+
+| Service             | IP Address      | Hostname              | Type       | Status |
+| ------------------- | --------------- | --------------------- | ---------- | ------ |
+| Proxmox VE          | `192.168.1.20`  | `pve.home.arpa`       | Hypervisor | ✅     |
+| Technitium DNS      | `192.168.1.21`  | `dns.home.arpa`       | LXC        | ✅     |
+| Nginx Proxy Manager | `192.168.1.22`  | `npm.home.arpa`       | LXC        | ✅     |
+| Tailscale           | `192.168.1.23`  | `ts.home.arpa`        | LXC        | ✅     |
+| Docker VM           | `192.168.1.30`  | `docker.home.arpa`    | VM         | ✅     |
+| Homelable           | `192.168.1.103` | `homelable.home.arpa` | LXC        | ✅     |
+
+## Network Topology
+
+The entire homelab runs on a single flat network. Static IP reservations are segmented by function so that any address communicates the role of the host at a glance.
+
+| Configuration | Value               |
+| ------------- | ------------------- |
+| Network       | `192.168.1.0/24`    |
+| Gateway       | `192.168.1.1`       |
+| Primary DNS   | `192.168.1.21`      |
+| Local Domain  | `home.arpa`         |
+| DHCP Range    | `192.168.1.100–254` |
+
+IP ranges are reserved by role:
+
+| Range               | Purpose                   |
+| ------------------- | ------------------------- |
+| `192.168.1.1`       | Router / Gateway          |
+| `192.168.1.2–19`    | Infrastructure services   |
+| `192.168.1.20–29`   | Hypervisors               |
+| `192.168.1.30–39`   | Docker / Dev VMs          |
+| `192.168.1.40–49`   | Storage                   |
+| `192.168.1.50–69`   | Labs / AI                 |
+| `192.168.1.70–99`   | Expansion                 |
+| `192.168.1.100–254` | DHCP clients              |
+
+Technitium DNS provides local resolution, split DNS, DNS caching, ad-blocking via the `big.oisd.nl` blocklist, and internal wildcard records. Nginx Proxy Manager handles SSL termination and reverse proxying for all `home.arpa` hostnames. Tailscale provides a subnet router and exit node so the full homelab is accessible securely from anywhere without exposing ports to the public internet.
+
+## Repository Structure
+
+The repository is organised to keep configuration, documentation, and automation in clearly separated directories.
+
+```txt
+homelab/
+│
+├── assets/           # Screenshots and visual assets
+│   └── screenshots/
+│
+├── compose/          # Docker Compose stacks
+│   ├── dashy/
+│   ├── portainer/
+│   ├── speedtest-tracker/
+│   └── uptime-kuma/
+│
+├── docs/             # Architecture notes, runbooks, and lab journal
+│   ├── arquitectura.md
+│   ├── bitacora.md
+│   └── runbooks.md
+│
+├── inventory/        # Network inventory: DNS records, hosts, ports, services
+│   ├── dns.md
+│   ├── hosts.md
+│   ├── ports.md
+│   └── services.md
+│
+├── scripts/          # Automation scripts
+│   ├── backup.sh
+│   ├── prune_docker.sh
+│   └── update_hosts.sh
+│
+├── README.md
+├── ROADMAP.md
+└── LICENSE
+```

@@ -1,0 +1,60 @@
+---
+title: "Proxmox VE: Hypervisor Setup and VM/LXC Management"
+sidebarTitle: "Proxmox VE"
+description: "Proxmox VE serves as the homelab hypervisor at 192.168.1.20, hosting LXC containers for core services and a dedicated Debian 13 VM for Docker workloads."
+---
+
+Proxmox VE is the foundation of the homelab, acting as the single hypervisor that orchestrates all virtualised workloads. It hosts a mix of lightweight LXC containers for core infrastructure services and a full Debian 13 virtual machine dedicated to Docker-based applications. This separation keeps the platform stable, modular, and easy to troubleshoot — each service lives in its own isolated environment without competing for system resources at the bare-metal level.
+
+<Info>
+  Proxmox VE at `pve.home.arpa` is the single control plane for all homelab resources. Every service — whether an LXC container or a full VM — is managed, monitored, and backed up from this host.
+</Info>
+
+## Host Details
+
+The Proxmox host sits at a fixed IP in the hypervisor range and is reachable by its internal DNS hostname from anywhere on the `home.arpa` domain.
+
+| Property | Value |
+|---|---|
+| IP Address | `192.168.1.20` |
+| Hostname | `pve.home.arpa` |
+| Role | Hypervisor (bare-metal) |
+
+## What Runs on Proxmox
+
+All core infrastructure and application workloads are managed as guests on the Proxmox host. Each guest is assigned a fixed IP in the appropriate subnet range based on its role.
+
+| Guest | Type | IP | Hostname | Status |
+|---|---|---|---|---|
+| Technitium DNS | LXC | `192.168.1.21` | `dns.home.arpa` | ✅ Active |
+| Nginx Proxy Manager | LXC | `192.168.1.22` | `npm.home.arpa` | ✅ Active |
+| Tailscale | LXC | `192.168.1.23` | `ts.home.arpa` | ✅ Active |
+| Docker VM | VM (Debian 13) | `192.168.1.30` | `docker.home.arpa` | ✅ Active |
+| Homelable | LXC | `192.168.1.103` | `homelable.home.arpa` | ✅ Active |
+
+## Common Commands
+
+The following Proxmox CLI commands are useful for day-to-day management directly on the `pve` host.
+
+```bash
+# List all QEMU/KVM virtual machines and their states
+qm list
+
+# List all LXC containers and their states
+pct list
+
+# Display the installed Proxmox VE version
+pveversion
+```
+
+## LXC vs VM Strategy
+
+The homelab uses a deliberate split between LXC containers and full virtual machines, based on the nature of each workload.
+
+**LXC containers** are used for core infrastructure services — DNS, reverse proxy, and VPN. These services are well-understood, stable, and do not require a full kernel. LXC provides lightweight process isolation with minimal overhead, allowing them to start in seconds and consume far fewer resources than a full VM. Because they share the host kernel, they are also simpler to maintain and restart during updates.
+
+**A full virtual machine (Debian 13)** is used for the Docker platform. Docker's interaction with the Linux kernel — including networking namespaces, cgroup management, and storage drivers — benefits from running inside a dedicated kernel rather than sharing the host's. This avoids compatibility edge cases that can occur with nested containerisation in LXC, and gives the Docker environment a clean, isolated kernel to manage without affecting the Proxmox host or other containers.
+
+<Note>
+  The Proxmox host itself is kept minimal and stable. No application services, Docker daemons, or experimental software run directly on the bare-metal node. This ensures the hypervisor remains reliable and is always available to manage and recover guest workloads.
+</Note>

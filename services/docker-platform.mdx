@@ -1,0 +1,67 @@
+---
+title: "Docker Platform: VM, Stacks, and Container Management"
+sidebarTitle: "Docker Platform"
+description: "The homelab Docker platform runs on a Debian 13 VM at 192.168.1.30, using Docker Engine, Docker Compose, and Portainer to manage containerised services."
+---
+
+The Docker platform is the primary workload host in the homelab. It runs as a dedicated virtual machine (`docker.home.arpa`, `192.168.1.30`) on top of Proxmox VE, keeping containerised services fully isolated from the hypervisor layer. All application stacks are defined as Docker Compose projects, version-controlled in the repository, and managed through either the CLI or the Portainer web UI.
+
+## Platform Stack
+
+The following tools make up the Docker platform:
+
+- **Docker Engine** — container runtime on Debian 13
+- **Docker Compose** — declarative stack definitions (one directory per stack)
+- **Portainer** — web-based container management GUI (`portainer.home.arpa`)
+- **Dashy** — visual service dashboard (`dashy.home.arpa`)
+- **Speedtest Tracker** — ISP performance monitoring (`speed.home.arpa`)
+- **Uptime Kuma** — service health checks (🚧 planned)
+- **PostgreSQL** — relational database backend (🚧 planned)
+- **Redis** — in-memory cache / message broker (🚧 planned)
+
+## Docker Compose Stacks
+
+Each service lives in its own subdirectory under `compose/`. This keeps stacks independent and makes it easy to start, stop, or update a single service without affecting others.
+
+| Stack               | Directory                     | Status |
+| ------------------- | ----------------------------- | ------ |
+| `dashy`             | `compose/dashy/`              | ✅     |
+| `portainer`         | `compose/portainer/`          | ✅     |
+| `speedtest-tracker` | `compose/speedtest-tracker/`  | ✅     |
+| `uptime-kuma`       | `compose/uptime-kuma/`        | 🚧     |
+
+## Common Docker Commands
+
+Use these commands on the Docker VM (`docker.home.arpa`) to manage containers and stacks:
+
+```bash
+# List all running containers
+docker ps
+
+# Start a stack in detached mode (run from the stack directory)
+docker compose up -d
+
+# Follow logs for a specific container
+docker logs <container>
+
+# Shut down a stack and remove its containers
+docker compose down
+```
+
+## Stack Locations
+
+The repository layout for Docker Compose projects:
+
+```txt
+compose/
+├── dashy/
+├── portainer/
+├── speedtest-tracker/
+└── uptime-kuma/
+```
+
+Persistent data for all stacks is stored on the shared HDD volume, mounted at `/mnt/hdd-backup/docker/`, so container data survives VM reboots and rebuilds.
+
+<Tip>
+  Visit **[portainer.home.arpa](http://portainer.home.arpa)** for a full GUI view of every running container, stack, image, volume, and network on the Docker VM — no terminal required.
+</Tip>

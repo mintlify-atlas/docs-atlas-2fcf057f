@@ -1,0 +1,65 @@
+---
+title: "Network Inventory: Hosts, Services, DNS, and Ports"
+sidebarTitle: "Inventory"
+description: "The homelab inventory tracks all hosts, services, DNS records, and port allocations across four Markdown files under the inventory/ directory."
+---
+
+The `inventory/` directory is the single source of truth for everything that is running — or reserved — in the homelab network. Four Markdown files collectively track every host and its IP address, every deployed service and its URL, every DNS record in Technitium, and every port allocation across the infrastructure. Keeping these files accurate makes troubleshooting, onboarding, and capacity planning dramatically faster.
+
+## Inventory Files
+
+| File | Contents |
+|---|---|
+| `inventory/hosts.md` | All hosts and their assigned IP addresses |
+| `inventory/services.md` | Deployed services, URLs, and current status |
+| `inventory/dns.md` | Internal DNS records managed by Technitium |
+| `inventory/ports.md` | Port allocations across all hosts and containers |
+
+## Host Inventory Summary
+
+The following hosts make up the core infrastructure of the homelab, all residing on the `192.168.1.0/24` network under the `home.arpa` local domain:
+
+| Host | Type | IP Address | Hostname |
+|---|---|---|---|
+| Proxmox VE | Hypervisor | `192.168.1.20` | `pve.home.arpa` |
+| Technitium DNS | LXC | `192.168.1.21` | `dns.home.arpa` |
+| Nginx Proxy Manager | LXC | `192.168.1.22` | `npm.home.arpa` |
+| Tailscale | LXC | `192.168.1.23` | `ts.home.arpa` |
+| Docker VM | VM | `192.168.1.30` | `docker.home.arpa` |
+| Homelable | LXC | `192.168.1.103` | `homelable.home.arpa` |
+
+<Info>
+  Static IP addresses are reserved in the router for all infrastructure nodes. The DHCP range (`192.168.1.100–254`) is separate from the statically assigned infrastructure ranges (`192.168.1.20–99`), so adding a new host will not conflict with existing reservations as long as it is assigned an address in the appropriate subnet segment.
+</Info>
+
+## Services Inventory Summary
+
+The table below reflects the current state of all deployed and in-progress services. Services marked 🚧 are planned or partially deployed and not yet production-ready within the homelab.
+
+| Service | URL | Function | Status |
+|---|---|---|---|
+| Portainer | `portainer.home.arpa` | Docker management | ✅ |
+| Dashy | `dashy.home.arpa` | Dashboard | ✅ |
+| Speedtest Tracker | `speed.home.arpa` | ISP monitoring | ✅ |
+| Technitium DNS | `dns.home.arpa` | DNS + Adblock | ✅ |
+| Nginx Proxy Manager | `npm.home.arpa` | Reverse Proxy | ✅ |
+| Homelable | `homelable.home.arpa` | Network map | ✅ |
+| Grafana | `grafana.home.arpa` | Observability | 🚧 |
+| Prometheus | `prometheus.home.arpa` | Metrics | 🚧 |
+| Gitea | `git.home.arpa` | Git self-hosted | 🚧 |
+
+All active services are reachable via their `home.arpa` hostnames thanks to Technitium DNS handling internal resolution and Nginx Proxy Manager terminating SSL and routing traffic to the appropriate containers on the Docker VM.
+
+## Updating the Inventory
+
+When hosts are added, removed, or reassigned in Proxmox, run the `update_hosts.sh` script from the `scripts/` directory to regenerate the inventory files automatically:
+
+```bash
+bash scripts/update_hosts.sh
+```
+
+This keeps `inventory/hosts.md` (and related files) in sync with the actual state of the network without requiring manual edits to each file individually.
+
+<Tip>
+  Treat the inventory files as living documentation — update them every time a new service is deployed or decommissioned. An accurate inventory makes it far easier to diagnose port conflicts, track down a service by IP, or hand off the lab to someone else. The `update_hosts.sh` script handles hosts, but `inventory/services.md`, `inventory/dns.md`, and `inventory/ports.md` should be reviewed manually after each infrastructure change.
+</Tip>
