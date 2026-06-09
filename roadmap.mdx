@@ -1,5 +1,5 @@
 ---
-title: "Homelab Roadmap: Phases and Planned Services"
+title: "Homelab Roadmap: Infrastructure Phases and Planned Services"
 sidebarTitle: "Roadmap"
 description: "Development roadmap for the homelab across four phases: core infra, dev platform, observability stack, and future AI and Kubernetes labs."
 ---
@@ -30,9 +30,10 @@ The dev platform phase adds container management, dashboards, and the services n
 | Gitea             | Self-hosted Git service at `git.home.arpa`    | 🚧     |
 | PostgreSQL        | Relational database for application workloads | 🚧     |
 | Redis             | In-memory cache and message broker            | 🚧     |
+| n8n               | Self-hosted workflow automation and API integration | 🚧     |
 
 <Note>
-  CI/CD pipelines and GitOps tooling are planned as a follow-on to the Gitea deployment. Once Gitea, PostgreSQL, and Redis are stable, the dev platform phase will close with a self-hosted CI/CD runner and GitOps-driven configuration management — likely using Forgejo Actions or Woodpecker CI alongside Flux or Argo CD.
+  CI/CD pipelines and GitOps tooling are planned as a follow-on to the Gitea deployment. Once Gitea, PostgreSQL, and Redis are stable, the dev platform phase will close with a self-hosted CI/CD runner and GitOps-driven configuration management.
 </Note>
 
 ## Phase 3 — Observability
@@ -44,7 +45,7 @@ The observability phase builds a full metrics and alerting stack on top of the r
 | Uptime Kuma | Healthcheck and uptime monitoring for all services    | 🚧     |
 | Grafana     | Metrics dashboards at `grafana.home.arpa`             | 🚧     |
 | Prometheus  | Metrics collection and storage at `prometheus.home.arpa` | 🚧     |
-| Alerting    | Alert rules and notification routing (email, Discord, or Telegram) | 🚧     |
+| Alerting    | Alert rules and notification routing for the observability stack | 🚧     |
 
 ## Phase 4 — Labs
 
@@ -66,6 +67,6 @@ Beyond the four main phases, additional projects are planned to extend the homel
 | Kubernetes Lab        | Full K8s environment with persistent storage and ingress | 🚧     |
 | AI / Ollama           | Self-hosted LLM inference and AI tooling                 | 🚧     |
 | Full Observability    | End-to-end metrics, logs, traces, and alerting           | 🚧     |
-| GitOps                | Flux or Argo CD managing cluster state from Git          | 🚧     |
-| CI/CD Self-Hosted     | Forgejo Actions or Woodpecker CI for automated pipelines | 🚧     |
+| GitOps                | Infrastructure-as-code with git as the source of truth   | 🚧     |
+| CI/CD Self-Hosted     | Self-hosted CI/CD runner for automated pipelines         | 🚧     |
 | Authentik             | Self-hosted identity provider and SSO for all services   | 🚧     |

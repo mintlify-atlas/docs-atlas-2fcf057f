@@ -1,7 +1,7 @@
 ---
 title: "Future Labs: Kubernetes, AI, GitOps, and Authentik"
 sidebarTitle: "Future Labs"
-description: "Planned homelab experiments include a Kubernetes cluster, Ollama for local AI inference, full GitOps with a self-hosted CI/CD pipeline, and Authentik for SSO."
+description: "Future homelab lab projects: a Kubernetes cluster, Ollama for local AI inference, complete observability, GitOps, self-hosted CI/CD, and Authentik SSO."
 ---
 
 Phase 4 of the homelab roadmap moves beyond stable service hosting into active infrastructure experimentation. Once the core platform, development services, and observability stack are solid, the focus shifts to learning-oriented projects: container orchestration with Kubernetes, local AI inference, declarative GitOps workflows, and unified identity management with Authentik. These labs are intentionally kept separate from production services so experiments can break things safely.
@@ -33,6 +33,20 @@ Ollama will bring local large language model inference to the homelab, allowing 
 
 AI and lab workloads have a dedicated IP reservation: `192.168.1.50–69` is set aside specifically for Labs / AI in the network inventory. Ollama and any associated model-serving or frontend services will be allocated addresses from this range, keeping them isolated from the core infrastructure subnet (`192.168.1.20–29`) and the Docker / Dev range (`192.168.1.30–39`).
 
+## Full Observability
+
+A complete observability stack — Grafana, Prometheus, and Alertmanager — is planned to provide metrics collection, dashboarding, and alerting across all homelab services. Grafana and Prometheus are already listed as planned services in the main service inventory, and this lab phase connects them into a unified monitoring pipeline with alert routing. The goal is end-to-end visibility: every service emitting metrics, every anomaly surfaced automatically.
+
+## GitOps
+
+The long-term infrastructure management goal is a fully declarative, Git-driven model where every service, configuration, and network rule is defined in code and reconciled automatically. Rather than making changes by SSHing into a machine or clicking through a UI, the desired state lives in the Gitea repository and an automation layer ensures the running infrastructure matches it.
+
+This applies to both application deployments (Docker Compose stacks, Kubernetes manifests) and infrastructure configuration (DNS records, reverse proxy rules, storage mounts). The CI/CD pipeline planned for Phase 4 — built on Gitea Actions — will be the mechanism that triggers reconciliation whenever a change is merged to the main branch.
+
+## CI/CD Self-Hosted
+
+A self-hosted CI/CD pipeline will close the loop between code changes and running deployments. The plan is to run pipelines entirely within the homelab — no external build services — so that every commit to Gitea can automatically trigger build, test, and deploy steps on homelab infrastructure. This keeps the full software delivery lifecycle on-premises and reinforces the GitOps workflow being built in parallel.
+
 ## Authentik
 
 Authentik will provide a unified identity and access management layer across all homelab services. Currently, each service manages its own login — Portainer, Dashy, Gitea, and future services all have independent credentials. Authentik replaces this with a single sign-on (SSO) provider that all services authenticate against via OIDC or SAML.
@@ -42,12 +56,6 @@ This means one set of credentials for the entire homelab, centralized session ma
 <Tip>
   Authentik also supports user provisioning flows, application portals, and detailed audit logs — making it a solid foundation for running a homelab with multiple users or stricter access controls.
 </Tip>
-
-## GitOps
-
-The long-term infrastructure management goal is a fully declarative, Git-driven model where every service, configuration, and network rule is defined in code and reconciled automatically. Rather than making changes by SSHing into a machine or clicking through a UI, the desired state lives in the Gitea repository and an automation layer ensures the running infrastructure matches it.
-
-This applies to both application deployments (Docker Compose stacks, Kubernetes manifests) and infrastructure configuration (DNS records, reverse proxy rules, storage mounts). The CI/CD pipeline planned for Phase 4 — built on Gitea Actions — will be the mechanism that triggers reconciliation whenever a change is merged to the main branch.
 
 <CardGroup cols={2}>
   <Card

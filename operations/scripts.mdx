@@ -50,17 +50,19 @@ Run this script periodically — or after tearing down a stack — to reclaim di
   Schedule all three scripts with `cron` to achieve fully automated, hands-off maintenance. A weekly Docker cleanup and a nightly or weekly backup are sensible starting points for a homelab workload.
 </Tip>
 
-Add entries to the crontab on the Docker VM (edit with `crontab -e`):
+Add entries to the crontab on the Docker VM (edit with `crontab -e`). The schedule and absolute path to the `scripts/` directory will vary depending on where the repository is cloned. The entries below are illustrative — adjust the timing and path to suit your environment:
 
 ```bash
-# Run Docker cleanup every Sunday at 02:00
-0 2 * * 0 /home/user/homelab/scripts/prune_docker.sh >> /var/log/prune_docker.log 2>&1
+# Illustrative example — adjust schedule and path to match your setup
 
-# Run backup every night at 03:00
-0 3 * * * /home/user/homelab/scripts/backup.sh >> /var/log/backup.log 2>&1
+# Run Docker cleanup (e.g. weekly)
+0 2 * * 0 /path/to/homelab/scripts/prune_docker.sh >> /var/log/prune_docker.log 2>&1
 
-# Update host inventory every Sunday at 04:00
-0 4 * * 0 /home/user/homelab/scripts/update_hosts.sh >> /var/log/update_hosts.log 2>&1
+# Run backup (e.g. nightly or weekly)
+0 3 * * * /path/to/homelab/scripts/backup.sh >> /var/log/backup.log 2>&1
+
+# Update host inventory (e.g. weekly)
+0 4 * * 0 /path/to/homelab/scripts/update_hosts.sh >> /var/log/update_hosts.log 2>&1
 ```
 
 Redirecting output to log files makes it easy to audit what each run did and to troubleshoot failures without having to run the scripts interactively.

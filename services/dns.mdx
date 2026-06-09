@@ -1,7 +1,7 @@
 ---
 title: "Technitium DNS: Internal DNS, Ad-Blocking, and Split DNS"
 sidebarTitle: "DNS"
-description: "Technitium DNS runs at 192.168.1.21 and provides local name resolution for the home.arpa domain, DNS caching, ad-blocking via blocklists, and split DNS support."
+description: "Technitium DNS at 192.168.1.21 provides local name resolution for home.arpa, DNS caching, ad-blocking via blocklists, and split DNS for the homelab."
 ---
 
 Technitium DNS is the authoritative resolver for the homelab's internal `home.arpa` domain and the first DNS hop for every device on the LAN. It handles local name resolution, caches upstream lookups to reduce latency, blocks advertising and tracking domains via curated blocklists, and supports split DNS so that internal hostnames never leak to the public internet.

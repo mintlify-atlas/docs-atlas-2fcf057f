@@ -1,7 +1,7 @@
 ---
 title: "Dev Platform: Gitea, PostgreSQL, Redis, and CI/CD"
 sidebarTitle: "Dev Platform"
-description: "The homelab dev platform will add Gitea for self-hosted Git, PostgreSQL and Redis as backing services, and a CI/CD pipeline — all running on the existing Docker VM."
+description: "Phase 2 of the homelab roadmap adds Gitea, PostgreSQL, Redis, and CI/CD to the Docker VM to support Discord bots, Python workers, and REST APIs."
 ---
 
 Phase 2 of the homelab roadmap expands the Docker VM (`docker.home.arpa`, `192.168.1.30`) from a basic container host into a proper development platform. The foundation services — Portainer, Dashy, and Speedtest Tracker — are already running. The next layer adds a self-hosted Git server, a relational database, and a caching layer to support real development workloads such as bots, workers, and REST APIs.
@@ -19,6 +19,7 @@ The following services are queued for deployment on the Docker platform as part 
 | Gitea      | `git.home.arpa`   | Self-hosted Git    | 🚧     |
 | PostgreSQL | —                 | Relational DB      | 🚧     |
 | Redis      | —                 | Cache / queue      | 🚧     |
+| CI/CD      | —                 | Build & deploy     | 🚧     |
 
 ## Currently Deployed (Phase 2)
 
@@ -54,6 +55,8 @@ With Gitea, PostgreSQL, and Redis in place, the Docker VM becomes capable of hos
 - **Telegram bots** — similar architecture, leveraging the same shared database and cache layer
 - **Python workers** — background task processors using Redis as a queue
 - **REST APIs** — lightweight services that expose data from PostgreSQL over HTTP, hosted behind Nginx Proxy Manager
+- **n8n** — self-hosted workflow automation, connecting internal services and external APIs without code
+- **Ollama** — local LLM inference for AI-assisted development workflows, running entirely on-premises
 
 Each workload will be managed as a Docker Compose stack in Portainer, keeping deployments consistent with the rest of the platform.
 

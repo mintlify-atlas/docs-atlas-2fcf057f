@@ -1,7 +1,7 @@
 ---
-title: "Homelab Storage: HDD Volumes and NFS Persistence"
+title: "Homelab Storage: HDD Volumes, NFS, and Persistence"
 sidebarTitle: "Storage"
-description: "The homelab uses a 1TB HDD for Docker volume persistence and Proxmox backups, mounted at /mnt/hdd-backup and shared via NFS between the hypervisor and Docker VM."
+description: "A 1TB HDD provides persistent storage for Docker volumes and Proxmox backups, mounted at /mnt/hdd-backup and shared via NFS across the homelab."
 ---
 
 Storage in the homelab is designed around a single guiding principle: persistent data must survive container restarts, VM rebuilds, and host reboots without manual intervention. A 1TB HDD provides the physical backing for both Proxmox-level backups and Docker volume persistence. That disk is exposed to the rest of the infrastructure through an NFS share, making the same storage path available to both the Proxmox host and the Docker VM — ensuring that all stateful services write to one consistent, centrally managed location regardless of which guest is running them.

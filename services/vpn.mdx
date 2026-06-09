@@ -1,7 +1,7 @@
 ---
 title: "Tailscale VPN: Secure Remote Access to the Homelab"
 sidebarTitle: "VPN"
-description: "Tailscale runs as an LXC at 192.168.1.23 and provides secure remote access via a subnet router, allowing access to all homelab services over an encrypted mesh VPN."
+description: "Tailscale at 192.168.1.23 acts as a subnet router, giving remote devices secure encrypted access to all homelab services without exposing any router ports."
 ---
 
 Tailscale provides secure, zero-configuration remote access to the homelab without requiring any open inbound ports on the router. A dedicated LXC at `192.168.1.23` acts as a subnet router, advertising the entire `192.168.1.0/24` network to the Tailscale mesh. Any device authenticated to the same Tailnet — phone, laptop, or workstation — can reach every homelab service as if it were on the local LAN.

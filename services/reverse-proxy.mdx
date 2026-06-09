@@ -1,7 +1,7 @@
 ---
 title: "Nginx Proxy Manager: Reverse Proxy and SSL for home.arpa"
 sidebarTitle: "Reverse Proxy"
-description: "Nginx Proxy Manager at 192.168.1.22 handles reverse proxying for all homelab services, including SSL termination, wildcard certificates, and local domain routing."
+description: "Nginx Proxy Manager at 192.168.1.22 provides reverse proxying for homelab services, SSL termination, wildcard certificates, and local domain routing."
 ---
 
 Nginx Proxy Manager (NPM) is the single ingress point for all homelab services. Every service that needs to be reachable by a friendly hostname — such as `portainer.home.arpa` or `dashy.home.arpa` — is configured as a proxy host in NPM. It handles SSL termination so that backend services can run plain HTTP, and its web UI makes it straightforward to add or modify routes without editing Nginx configuration files directly.
@@ -32,7 +32,7 @@ Nginx Proxy Manager (NPM) is the single ingress point for all homelab services. 
     Technitium DNS resolves `portainer.home.arpa` to `192.168.1.22` — the IP address of Nginx Proxy Manager — via a wildcard A record (`*.home.arpa`).
   </Step>
   <Step title="NPM proxies the request">
-    NPM matches the `Host` header against its configured proxy hosts and forwards the request to the correct backend service — in this example, `192.168.1.30:9000` (Portainer).
+    NPM matches the `Host` header against its configured proxy hosts and forwards the request to the correct backend service running on the Docker VM (`192.168.1.30`).
   </Step>
   <Step title="SSL termination">
     TLS is terminated at NPM. The backend service receives plain HTTP traffic on its internal port, keeping backend configuration simple.
@@ -41,12 +41,12 @@ Nginx Proxy Manager (NPM) is the single ingress point for all homelab services. 
 
 ## Configured Proxy Hosts
 
-| Service             | Hostname                    | Backend                  |
-| ------------------- | --------------------------- | ------------------------ |
-| Portainer           | `portainer.home.arpa`       | `192.168.1.30:9000`      |
-| Dashy               | `dashy.home.arpa`           | `192.168.1.30:4000`      |
-| Speedtest Tracker   | `speed.home.arpa`           | `192.168.1.30:8765`      |
-| Technitium DNS      | `dns.home.arpa`             | `192.168.1.21:5380`      |
+| Service             | Hostname                    | Backend Host          |
+| ------------------- | --------------------------- | --------------------- |
+| Portainer           | `portainer.home.arpa`       | `192.168.1.30`        |
+| Dashy               | `dashy.home.arpa`           | `192.168.1.30`        |
+| Speedtest Tracker   | `speed.home.arpa`           | `192.168.1.30`        |
+| Technitium DNS      | `dns.home.arpa`             | `192.168.1.21`        |
 
 <Tip>
   Configure a single wildcard DNS record — **`*.home.arpa → 192.168.1.22`** — in Technitium DNS. This means every new service you add to NPM is immediately reachable by hostname the moment its proxy host is saved, with no additional DNS changes required.

@@ -1,7 +1,7 @@
 ---
 title: "Homelab Architecture: Proxmox, LXC, and Docker Stack"
 sidebarTitle: "Architecture"
-description: "Full infrastructure topology of the homelab: Proxmox VE hypervisor, LXC containers for core services, a dedicated Docker VM, and a flat 192.168.1.0/24 network."
+description: "Full topology of the homelab: Proxmox VE hypervisor, LXC containers for core services, a dedicated Docker VM, and a 192.168.1.0/24 network."
 ---
 
 The homelab is built around Proxmox VE as the single hypervisor managing all compute resources. Core networking services — DNS, reverse proxy, and VPN — run in isolated LXC containers for maximum efficiency and independent lifecycle management. Application workloads live inside a dedicated Debian 13 Docker VM, cleanly separated from the infrastructure layer. A flat `192.168.1.0/24` network with static IP assignments and internal DNS resolution ties everything together, making every service addressable by a predictable hostname under the `home.arpa` domain.
